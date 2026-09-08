@@ -60,4 +60,6 @@ Lanterns settle into six scattered positions with varied heights, angles, and sc
 
 The final heart is made only from the 20 stars and their straight connecting lines; there is no curved outline overlay. Flower controls use compact hit areas so front flowers do not block unplanted seeds behind them.
 
-Development uses Webpack on port 3000. Generated output is isolated by the actual operating-system account under `.next/account-*`, so Codex and your terminal do not replace each other's Windows-owned cache files. Stop the existing server with Ctrl+C before starting another.
+Development uses Webpack on port 3000. Windows development output is isolated by the actual operating-system account under `.next/account-*`, so Codex and your terminal do not replace each other's Windows-owned cache files. Stop the existing server with Ctrl+C before starting another.
+
+Production builds use the standard `.next` directory for Vercel and `pnpm start`. Keep Vercel's Output Directory at its Next.js default.
