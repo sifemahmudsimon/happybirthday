@@ -1,0 +1,7 @@
+﻿# Celestial garden background
+
+Generated using the built-in image-generation tool. Saved asset: `public/art/celestial-garden.png`.
+
+## Prompt
+
+Use case: illustration-story. Asset type: immersive birthday web experience environment background, wide landscape 16:9. Paint an exquisite surreal celestial garden in soft baby pink, mauve, lavender and cream with intricate fine dark plum ink outlines and delicate gouache textures. Dreamlike storybook stage, sophisticated art nouveau / vintage illustrated fantasy novel aesthetic. A huge glowing pale peach moon in the upper middle, small distant floating pink islands and a long winding rose silk ribbon pathway receding into the clouds. Architectural pink arch ruins at the far sides. Dense beautifully detailed giant pale pink lilies, irises, lavender foliage and curled ferns framing the bottom left and bottom right corners, with layers of cloud banks. The middle 55% must be airy almost empty soft pink mist and sky so live typography and interactive objects can be placed over it. Strong depth with foreground botanical illustrations, middle mist, far celestial mountains. Not photorealistic, not plastic 3D, not childish clipart, no people, no text, no lettering, no logos. Rich carefully drawn botanical detail at edges with clean quiet center. Warm magical sunrise, artistic, cinematic, gentle grain. Full bleed illustration only, no website mockup, no UI.
