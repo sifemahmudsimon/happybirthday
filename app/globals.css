@@ -87,3 +87,37 @@ html[data-motion="calm"] .scattered-lantern{translate:-50% -50%;scale:var(--lant
 /* Compose the unconnected sky as a quiet celestial medallion. */
 .virgo-sky-atmosphere{position:absolute;inset:0;pointer-events:none}.sky-medallion{position:absolute;inset:-5%;border:1px solid #a478a42b;border-radius:50%;background:radial-gradient(ellipse,#f7e0e57d 5%,#e1c6dd25 58%,transparent 72%);box-shadow:0 0 80px #f6dce138}.sky-medallion:after{content:'';position:absolute;inset:4%;border-radius:50%;border:1px dashed #a880a222}.sky-sign-caption,.sky-date-caption{position:absolute;left:0;right:0;text-align:center;color:#815781;font:8px/1.4 Arial;letter-spacing:3px}.sky-sign-caption{top:-9%}.sky-date-caption{bottom:-8%;font:italic 13px Georgia;letter-spacing:5px}.virgo-sky-atmosphere>i{position:absolute;width:3px;height:3px;background:#fff1d6;border-radius:50%;box-shadow:0 0 9px #fff4d8;animation:sky-shimmer 4s ease-in-out infinite alternate}.constellation-playground .catch-star>span{font-size:var(--star-size,32px);color:#98729e;filter:drop-shadow(0 0 10px #fff1d999)}.constellation-playground .catch-star.caught>span{color:#c09a6b;filter:drop-shadow(0 0 9px #ffe3a6);transform:scale(.8)}.next-sky-star:before{content:'';position:absolute;inset:1px;border:1px solid #b58aae70;border-radius:50%;box-shadow:0 0 18px #ffe7cf66;animation:sky-beacon 2.5s ease-in-out infinite alternate}.constellation-playground .constellation-line,.constellation-playground .constellation-closing{stroke:#9b73a4;stroke-width:.32}@keyframes sky-beacon{to{scale:1.13;opacity:.4}}@keyframes sky-shimmer{to{opacity:.25}}
 @media(max-width:700px){.constellation-playground .catch-star>span{font-size:calc(var(--star-size,32px)*.75)}.sky-sign-caption{font-size:6px;letter-spacing:2px}.sky-date-caption{font-size:10px;letter-spacing:3px}.next-sky-star:before{inset:0}}
+
+/* A three-panel paper model preserves the printed page during each fold. */
+.hidden-letter.letter-folding{pointer-events:none;overflow:hidden;background:transparent;box-shadow:none;border-color:transparent;animation:fold-letter-away 1800ms ease both}
+.hidden-letter.letter-folding>*:not(.folding-paper-model){visibility:hidden}
+.folding-paper-model{position:absolute;inset:0;perspective:1400px;transform-style:preserve-3d;pointer-events:none}
+.paper-panel{position:absolute;left:0;right:0;overflow:visible;background:transparent;transform-style:preserve-3d}
+.paper-panel-front{position:absolute;inset:0;overflow:hidden;background:#fff0de;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:translateZ(.2px);box-shadow:0 1px 0 #9d718b44}
+.folding-paper-print{position:absolute;left:0;box-sizing:border-box;background:#fff0de}
+.paper-panel:after{content:'';position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:rotateX(180deg) translateZ(.2px);background:linear-gradient(100deg,#ead5bf,#fff0de 35%,#f3e0ca);border:1px solid #c9a78d55}
+.paper-panel-0{transform-origin:center bottom;z-index:3;animation:paper-top-fold 1800ms ease-in-out both}
+.paper-panel-1{z-index:1}
+.paper-panel-2{transform-origin:center top;z-index:4;animation:paper-bottom-fold 1800ms ease-in-out both}
+@keyframes paper-top-fold{0%,8%{transform:rotateX(0)}40%,100%{transform:rotateX(-180deg);box-shadow:0 -5px 14px #704a6533}}
+@keyframes paper-bottom-fold{0%,42%{transform:rotateX(0)}75%,100%{transform:rotateX(180deg);box-shadow:0 5px 14px #704a6544}}
+@keyframes fold-letter-away{0%,78%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(90px) scale(.65) rotate(-5deg);opacity:0}}
+.hidden-letter.letter-folding::backdrop{animation:letter-backdrop-away 1800ms ease both}
+@keyframes letter-backdrop-away{0%,75%{opacity:1}100%{opacity:0}}
+html[data-motion="calm"] .hidden-letter.letter-folding,html[data-motion="calm"] .paper-panel{animation-duration:350ms}
+
+/* Memory photos retain their complete frame in both portrait and landscape. */
+.memory-photo-window{width:min(900px,92vw)}
+.memory-photo-window>img{display:block;width:100%;height:auto;max-height:62svh;object-fit:contain;margin:0 auto}
+@media(max-width:700px){.memory-photo-window{width:92vw;padding:20px}.memory-photo-window>img{height:auto;max-height:55svh}}
+
+.memory-photo-copy>.micro{font-size:6px;margin-top:23px;letter-spacing:1.5px}
+@media(min-width:701px){
+  .memory-photo-window{width:min(1120px,92vw)}
+  .memory-photo-window[open]{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:36px;align-items:center}
+  .memory-photo-window>img{max-height:76svh}
+  .memory-photo-copy{text-align:left;padding:20px 10px 20px 0;min-width:0}
+  .memory-photo-copy>.micro{margin-top:0}
+  .memory-photo-copy p{margin-left:0;margin-right:0}
+}
+@media(max-width:700px){.memory-photo-copy>.micro{font-size:5px}}

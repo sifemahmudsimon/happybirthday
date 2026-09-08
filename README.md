@@ -40,7 +40,7 @@ Interaction direction draws on the user’s Zajno Motion, HappyScope, Qlip 2025,
 
 ## Playful detours and secret letter
 
-Nine stops now include a sixteen-star collection game that forms a heart, a replayable Simon/Priya/Olive/Heart matching game, and a hidden-letter hunt. Find the star seals beside the office, below the tea scene, and among the memories. Their word pieces are CIG, ARE, and TTE. Join them to enter CIGARETTE in the moon scene. Solving the puzzle opens the letter automatically; a large labeled envelope lets her read it again. Optional clue buttons return to the relevant scenes. Progress is retained while navigating in the current page session; reloading starts a fresh visit.
+Nine stops now include a sixteen-star collection game that forms a heart, a replayable Simon/Priya/Olive/Heart matching game, and a hidden-letter hunt. Find the star seals beside the office, below the tea scene, and among the memories. Their word pieces are CIG, ARE, and TTE. Join them to enter CIGARETTE in the moon scene. Solving the puzzle unlocks a labeled envelope; she clicks it to open the letter. Fold, close, and Escape animate the paper folding away before dismissing it. Optional clue buttons return to the relevant scenes. Progress is retained while navigating in the current page session; reloading starts a fresh visit.
 
 The personal letter and puzzle clues are in `app/play-scenes.tsx`. Its draft uses Simon’s supplied office, friendship, and tea-break story. Edit the letter there before sharing if you want different wording.
 
@@ -59,3 +59,5 @@ The star game starts as a stylized Virgo symbol made of 20 numbered stars. Conse
 Lanterns settle into six scattered positions with varied heights, angles, and scale. New wishes float upward into place; restored wishes appear in their saved positions and gently drift.
 
 The final heart is made only from the 20 stars and their straight connecting lines; there is no curved outline overlay. Flower controls use compact hit areas so front flowers do not block unplanted seeds behind them.
+
+Development uses Webpack on port 3000. Generated output is isolated by the actual operating-system account under `.next/account-*`, so Codex and your terminal do not replace each other's Windows-owned cache files. Stop the existing server with Ctrl+C before starting another.
