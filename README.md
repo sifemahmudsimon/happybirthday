@@ -54,8 +54,8 @@ The memory scene uses the supplied YRF YouTube upload of Hai Junoon (KK), video 
 
 For local audio files, `birthday.music` and `birthday.memoryMusic` support preloading and gain fades. The original memory melody is the fallback while the YouTube soundtrack loads. Reference: https://developers.google.com/youtube/iframe_api_reference
 
-The star game starts as a scattered sky. Each click draws a line from the previous selected star, preserving the player's order. After all sixteen connections, the same stars and attached lines ease into a heart. Replay scatters them again; gentle motion shows the final shape without the movement.
+The star game starts as a stylized Virgo symbol made of 20 numbered stars. Consecutive numbered connections (1 to 2 through 19 to 20) appear as their endpoint stars are lit. When all stars are connected, Virgo pauses briefly, then the stars transform into a heart made of straight connections. Plain number labels are slightly larger; connected stars show the original small heart marker; replay restores Virgo.
 
 Lanterns settle into six scattered positions with varied heights, angles, and scale. New wishes float upward into place; restored wishes appear in their saved positions and gently drift.
 
-The final heart is made only from the 16 stars and their straight connecting lines; there is no curved outline overlay. Flower controls use compact hit areas so front flowers do not block unplanted seeds behind them.
+The final heart is made only from the 20 stars and their straight connecting lines; there is no curved outline overlay. Flower controls use compact hit areas so front flowers do not block unplanted seeds behind them.

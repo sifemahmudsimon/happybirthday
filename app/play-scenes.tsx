@@ -13,19 +13,22 @@ export function SecretSeal({ index, found, onFind }: { index: number; found: boo
   return <button className={`secret-seal seal-${index} ${found ? "seal-found" : ""}`} onClick={() => onFind(index)} aria-label={`${found ? "Collected" : "Inspect"} ${secretClues[index].name}`}><span>{found ? secretClues[index].letter : "✧"}</span><small>{found ? "a piece of a secret" : "something glimmers…"}</small></button>;
 }
 
-const starPositions = [[10, 15], [34, 9], [59, 18], [85, 10], [20, 35], [45, 30], [72, 37], [92, 33], [9, 58], [32, 57], [58, 54], [81, 61], [18, 82], [44, 78], [67, 87], [91, 84]];
-const heartPositions = [[50, 27], [40, 17], [28, 12], [18, 16], [10, 26], [9, 38], [16, 51], [29, 65], [50, 85], [71, 65], [84, 51], [91, 38], [90, 26], [82, 16], [72, 12], [60, 17]];
+// A continuous, numbered stroke: every segment joins consecutive stars.
+const starPositions = [[14,74],[14,54],[14,34],[22,20],[34,30],[35,51],[35,73],[40,42],[48,20],[59,30],[60,50],[60,67],[69,79],[82,70],[88,53],[83,37],[73,29],[68,43],[73,59],[89,82]];
+const virgoEdges = Array.from({ length: starPositions.length - 1 }, (_, i) => [i, i + 1]);
+// Reference-shaped heart: full lobes and straight, broad diagonals into the tip.
+// Mirrored points keep all 20 stars separated without pinching the lower outline.
+const heartPositions = [[50,25],[61,14],[74,8],[86,12],[94,24],[96,37],[88,52],[78,65],[69,74],[59.5,83],[50,92],[40.5,83],[31,74],[22,65],[12,52],[4,37],[6,24],[14,12],[26,8],[39,14]];
 const pairKinds = ["simon", "priya", "olive", "heart", "priya", "heart", "simon", "olive"];
 const pairNames: Record<string, string> = { simon: "Simon", priya: "Priya", olive: "Olive", heart: "Heart" };
 
 export function PlayScenes({ found, onCelebrate, go }: { found: number[]; onCelebrate: () => void; go: (i: number) => void }) {
   const [stars, setStars] = useState<number[]>([]);
   const [heartProgress, setHeartProgress] = useState(0);
-  const [skyPointer, setSkyPointer] = useState<number[] | null>(null);
   useEffect(() => {
     if (stars.length !== starPositions.length) return;
     const gentle = document.documentElement.dataset.motion === "calm";
-    const start = performance.now() + (gentle ? 0 : 700);
+    const start = performance.now() + (gentle ? 0 : 1500);
     let frame = 0;
     const formHeart = (now: number) => {
       const progress = gentle ? 1 : Math.max(0, Math.min(1, (now - start) / 1900));
@@ -36,7 +39,7 @@ export function PlayScenes({ found, onCelebrate, go }: { found: number[]; onCele
     return () => cancelAnimationFrame(frame);
   }, [stars.length]);
   const skyPositions = starPositions.map(([x, y], i) => {
-    const target = heartPositions[Math.max(0, stars.indexOf(i))];
+    const target = heartPositions[i];
     return [x + (target[0] - x) * heartProgress, y + (target[1] - y) * heartProgress];
   });
   const [flipped, setFlipped] = useState<number[]>([]);
@@ -75,17 +78,17 @@ export function PlayScenes({ found, onCelebrate, go }: { found: number[]; onCele
 
   return <>
     <section className="world-scene stargame-scene" aria-label="Pocketful of starlight">
-      <div className="play-heading"><span className="micro">A LITTLE DETOUR / THE SKY CAN WAIT</span><h2>A pocketful<br/>of <em>starlight.</em></h2><p>Connect the scattered stars in any order.<br/>There’s a little surprise in the sky when you finish.</p></div>
-      <div className="star-playground constellation-playground" onPointerMove={e => { if (e.pointerType === "touch" || stars.length === starPositions.length) return; const rect = e.currentTarget.getBoundingClientRect(); setSkyPointer([(e.clientX - rect.left) / rect.width * 100, (e.clientY - rect.top) / rect.height * 100]); }} onPointerLeave={() => setSkyPointer(null)}>
+      <div className="play-heading"><span className="micro">A LITTLE DETOUR / THE SKY CAN WAIT</span><h2>A pocketful<br/>of <em>starlight.</em></h2><p>Light the numbered stars to draw your Virgo sign.<br/>Finish all {starPositions.length}, and watch it become a heart.</p></div>
+      <div className="star-playground constellation-playground">
+        <div className="virgo-sky-atmosphere" style={{opacity:1-heartProgress}} aria-hidden="true"><div className="sky-medallion"/><span className="sky-sign-caption">VIRGO / THE MAIDEN</span>{[[5,15],[48,5],[92,19],[5,53],[95,72],[24,94],[64,93],[48,62]].map(([x,y],i)=><i key={i} style={{left:`${x}%`,top:`${y}%`,animationDelay:`${i*-.8}s`}}/>)}</div>
         <svg className="sky-connections" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          {stars.slice(1).map((id, i) => <line key={`${stars[i]}-${id}`} className="constellation-line" x1={skyPositions[stars[i]][0]} y1={skyPositions[stars[i]][1]} x2={skyPositions[id][0]} y2={skyPositions[id][1]} pathLength="1"/>)}
-          {stars.length > 0 && stars.length < starPositions.length && skyPointer && <line className="constellation-preview" x1={skyPositions[stars[stars.length - 1]][0]} y1={skyPositions[stars[stars.length - 1]][1]} x2={skyPointer[0]} y2={skyPointer[1]}/>}
-          {stars.length === starPositions.length && <line className="constellation-closing" style={{opacity:heartProgress}} x1={skyPositions[stars[stars.length - 1]][0]} y1={skyPositions[stars[stars.length - 1]][1]} x2={skyPositions[stars[0]][0]} y2={skyPositions[stars[0]][1]}/>}
+          <g style={{opacity:1-heartProgress}}>{virgoEdges.filter(([a,b]) => stars.includes(a) && stars.includes(b)).map(([a,b]) => <line key={`${a}-${b}`} className="constellation-line" x1={skyPositions[a][0]} y1={skyPositions[a][1]} x2={skyPositions[b][0]} y2={skyPositions[b][1]} pathLength="1"/>)}</g>
+          {stars.length === starPositions.length && <g style={{opacity:heartProgress}}>{skyPositions.map(([x,y],i) => <line key={i} className="constellation-closing" x1={x} y1={y} x2={skyPositions[(i+1)%skyPositions.length][0]} y2={skyPositions[(i+1)%skyPositions.length][1]}/>)}</g>}
         </svg>
-        {skyPositions.map(([x, y], i) => <button key={i} className={`catch-star ${stars.includes(i) ? "caught" : ""}`} style={{ left: `${x}%`, top: `${y}%` } as CSSProperties} aria-label={`${stars.includes(i) ? "Connected" : "Connect"} star ${i + 1}`} disabled={stars.includes(i)} onClick={() => { setStars(s => s.includes(i) ? s : [...s, i]); if (stars.length === starPositions.length - 1) { setSkyPointer(null); onCelebrate(); } }}><span>✦</span><small>{stars.includes(i) ? "♡" : String(i + 1).padStart(2, "0")}</small></button>)}
+        {skyPositions.map(([x, y], i) => <button key={i} className={`catch-star ${stars.includes(i) ? "caught" : ""} ${i === starPositions.findIndex((_, n) => !stars.includes(n)) ? "next-sky-star" : ""}`} style={{ left: `${x}%`, top: `${y}%`, "--star-size": `${[0,8,19].includes(i) ? 36 : i % 3 === 0 ? 29 : 32}px` } as CSSProperties} aria-label={`${stars.includes(i) ? "Connected" : "Connect"} star ${i + 1}`} disabled={stars.includes(i)} onClick={() => { setStars(s => s.includes(i) ? s : [...s, i]); if (stars.length === starPositions.length - 1) { onCelebrate(); } }}><span>✦</span><small>{stars.includes(i) ? "♡" : String(i + 1).padStart(2, "0")}</small></button>)}
         <div className={`heart-keepsake ${heartProgress === 1 ? "heart-ready" : ""}`} style={{opacity:heartProgress}} aria-hidden="true"><span>made of love</span><i>stardust, for Priya</i></div>
       </div>
-      <div className="play-status" aria-live="polite"><p>{heartProgress === 1 ? "Your little constellation was made of love all along." : stars.length === starPositions.length ? "Now watch what your stars become…" : `${stars.length} / ${starPositions.length} stars connected. Choose any star to keep drawing.`}</p>{stars.length === starPositions.length && <button className="play-link" onClick={() => { setStars([]); setHeartProgress(0); setSkyPointer(null); }}>Scatter the stars. Draw again ↗</button>}</div>
+      <div className="play-status" aria-live="polite"><p>{heartProgress === 1 ? "Your little constellation was made of love all along." : stars.length === starPositions.length ? "Your Virgo sign is complete. Here comes a little love…" : `${stars.length} / ${starPositions.length} stars lit. Follow the numbers to reveal Virgo.`}</p>{stars.length === starPositions.length && <button className="play-link" onClick={() => { setStars([]); setHeartProgress(0); }}>Draw your Virgo again ↗</button>}</div>
     </section>
 
     <section className="world-scene matching-scene" aria-label="Made for each other">
