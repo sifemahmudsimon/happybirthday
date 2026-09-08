@@ -67,3 +67,14 @@ html[data-motion="calm"] .scattered-lantern{translate:-50% -50%;scale:var(--lant
 .birthday-garden .garden-seed{height:78px;overflow:visible}.birthday-garden .garden-seed:not(.flower-grown){z-index:10}.birthday-garden .garden-flower,.birthday-garden .garden-flower *{pointer-events:none}
 .constellation-playground .catch-star{width:48px;height:48px}.constellation-playground .catch-star>span{font-size:38px}.constellation-playground .catch-star>small{font-size:7px;top:87%}.constellation-closing{stroke-width:.4}
 @media(max-width:700px){.constellation-playground .catch-star{width:32px;height:32px}.constellation-playground .catch-star>span{font-size:27px}.constellation-playground .catch-star>small{font-size:5px}}
+/* Let the side cards receive the pointer without rising above Virgo. */
+.opening-copy,.opening-corner,.portal-halo,.portal-orbit-label,.portal-handwritten{pointer-events:none}
+.satellite-card:hover,.satellite-card:focus-within{z-index:2}
+.satellite-left:hover,.satellite-left:focus-within{transform:translate(-18px,-18px) rotate(-15deg)}
+.satellite-right:hover,.satellite-right:focus-within{transform:translate(18px,-18px) rotate(15deg)}
+.satellite-card{transition:transform .5s,box-shadow .5s}
+.satellite-card:hover,.satellite-card:focus-within{box-shadow:0 20px 38px #58355a38}
+@media(max-width:700px){.satellite-left:hover,.satellite-left:focus-within{transform:translate(-5px,-10px) rotate(-15deg)}.satellite-right:hover,.satellite-right:focus-within{transform:translate(5px,-10px) rotate(15deg)}}
+/* A square sky keeps the heart upright instead of stretching it sideways. */
+.constellation-playground{--sky-size:min(44vw,62svh);width:var(--sky-size);height:var(--sky-size);left:calc(70% - var(--sky-size)/2);right:auto;top:17%}
+@media(max-width:700px){.constellation-playground{--sky-size:min(86vw,38svh);left:calc(50% - var(--sky-size)/2);top:43%}}
