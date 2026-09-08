@@ -5,9 +5,10 @@ import Image from "next/image";
 import { birthday, cards, memories } from "./birthday-content";
 import { CardArt, Spark } from "./celestial-art";
 import { OfficeIsland, Ribbon, TeaWorld } from "./world-art";
+import { PlayScenes, SecretSeal } from "./play-scenes";
 import { Confetti, useBirthdayMusic } from "./experience-effects";
 
-const chapters = ["A little universe", "Our office angel", "An invisible thread", "Tea. Gossip. Repeat.", "The memory constellation", "A wish for Priya"];
+const chapters = ["A little universe", "Our office angel", "An invisible thread", "Tea. Gossip. Repeat.", "The memory constellation", "Pocketful of starlight", "Made for each other", "The moon keeps a secret", "A wish for Priya"];
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const subscribe = (callback: () => void) => {
   const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -31,6 +32,8 @@ export default function Home() {
   const [wished, setWished] = useState(false);
   const [photo, setPhoto] = useState<number | null>(null);
   const [fortune, setFortune] = useState<number | null>(null);
+  const [found, setFound] = useState<number[]>([]);
+  const [sealNotice, setSealNotice] = useState("");
   const [menu, setMenu] = useState(false);
   const stage = useRef<HTMLDivElement>(null);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -58,42 +61,56 @@ export default function Home() {
 
   useEffect(() => {
     document.documentElement.dataset.motion = reduced ? "calm" : "full";
-    let frame = 0, ticking = false;
-    const update = () => {
-      ticking = false;
+    let frame = 0;
+    let camera = window.scrollY;
+    let lastTime = 0;
+    const scenes = stage.current?.querySelectorAll<HTMLElement>(".world-scene");
+    const update = (time: number) => {
+      const elapsed = Math.min(64, time - (lastTime || time - 16));
+      lastTime = time;
+      const target = window.scrollY;
+      camera = reduced ? target : camera + (target - camera) * (1 - Math.exp(-elapsed / 115));
+      if (Math.abs(target - camera) < .1) camera = target;
       const max = document.documentElement.scrollHeight - innerHeight;
-      const p = clamp(window.scrollY / Math.max(1, max)) * 5;
-      stage.current?.style.setProperty("--travel", String(p));
-      stage.current?.style.setProperty("--journey", `${p / 5 * 100}%`);
-      setActive(Math.round(p));
-      stage.current?.querySelectorAll<HTMLElement>(".world-scene").forEach((scene, i) => {
+      const p = clamp(camera / Math.max(1, max)) * (chapters.length - 1);
+      stage.current?.style.setProperty("--travel", String(p / (chapters.length - 1) * 5));
+      stage.current?.style.setProperty("--journey", `${p / (chapters.length - 1) * 100}%`);
+      setActive(previous => previous === Math.round(p) ? previous : Math.round(p));
+      scenes?.forEach((scene, i) => {
         const d = p - i;
-        const visible = reduced ? Math.round(p) === i : Math.abs(d) < .79;
+        const visible = reduced ? Math.round(p) === i : Math.abs(d) < 1;
         scene.style.setProperty("--local", String(d));
-        scene.style.opacity = String(reduced ? (visible ? 1 : 0) : clamp((.78 - Math.abs(d)) / .38));
+        scene.style.opacity = String(reduced ? (visible ? 1 : 0) : clamp(1 - Math.abs(d)));
         scene.style.visibility = visible ? "visible" : "hidden";
         scene.inert = Math.round(p) !== i;
         scene.setAttribute("aria-hidden", String(Math.round(p) !== i));
       });
+      frame = camera === target ? 0 : requestAnimationFrame(update);
     };
-    const scroll = () => { if (!ticking) { ticking = true; frame = requestAnimationFrame(update); } };
+    const followScroll = () => { if (!frame) { lastTime = 0; frame = requestAnimationFrame(update); } };
     const pointer = (e: globalThis.PointerEvent) => {
       if (reduced || e.pointerType === "touch") return;
       stage.current?.style.setProperty("--pointer-x", `${(e.clientX / innerWidth - .5) * 22}px`);
       stage.current?.style.setProperty("--pointer-y", `${(e.clientY / innerHeight - .5) * 18}px`);
     };
     frame = requestAnimationFrame(update);
-    window.addEventListener("scroll", scroll, { passive: true });
-    window.addEventListener("resize", scroll);
+    window.addEventListener("scroll", followScroll, { passive: true });
+    window.addEventListener("resize", followScroll);
     window.addEventListener("pointermove", pointer);
-    return () => { cancelAnimationFrame(frame); window.removeEventListener("scroll", scroll); window.removeEventListener("resize", scroll); window.removeEventListener("pointermove", pointer); };
+    return () => { cancelAnimationFrame(frame); window.removeEventListener("scroll", followScroll); window.removeEventListener("resize", followScroll); window.removeEventListener("pointermove", pointer); };
   }, [reduced]);
 
   useEffect(() => () => { if (portalTimer.current) clearTimeout(portalTimer.current); }, []);
 
+  useEffect(() => {
+    if (!sealNotice) return;
+    const timer = setTimeout(() => setSealNotice(""), 6000);
+    return () => clearTimeout(timer);
+  }, [sealNotice]);
+
   function go(index: number) {
     const max = document.documentElement.scrollHeight - innerHeight;
-    window.scrollTo({ top: clamp(index, 0, 5) / 5 * max, behavior: reduced ? "instant" : "smooth" });
+    window.scrollTo({ top: clamp(index, 0, chapters.length - 1) / (chapters.length - 1) * max, behavior: reduced ? "instant" : "smooth" });
     setMenu(false);
   }
   function enter() { window.scrollTo({ top: 0, behavior: "instant" }); setOpened(true); setBurst(v => v + 1); void startMusic(); }
@@ -130,6 +147,8 @@ export default function Home() {
       {soundError && <div className="sound-error" role="status">{soundError}</div>}
       {menu && <nav className="chapter-menu" aria-label="Story chapters">{chapters.map((name,i)=><button key={name} onClick={()=>go(i)}><span>0{i+1}</span>{name}<b>↗</b></button>)}</nav>}
 
+      <button className="secret-tracker" onClick={() => go(7)} aria-label={`Follow the hidden letter clues, ${found.length} of 3 seals found`}>✧ <span>A letter is hiding here</span><b>{found.length}/3</b></button>
+      <span className="seal-notice" role="status">{sealNotice}</span>
       <main className="scene-world" aria-label="Priya’s interactive birthday story">
         <section className="world-scene opening-scene" aria-label="A little universe" style={{"--local":0} as CSSProperties}>
           <div className="opening-copy"><span className="micro">THE UNIVERSE DID SOMETHING RIGHT ON SEPTEMBER 03</span><h2>Happy<br/><em>Birthday,</em><strong>{birthday.name}<span>✧</span></strong></h2><p className="script">the world is lovelier with you in it.</p></div>
@@ -140,7 +159,7 @@ export default function Home() {
         <section className="world-scene office-scene" aria-label="Our office angel">
           <div className="scene-copy"><span className="micro">CHAPTER ONE / TWO NEW FACES</span><h2>Every story<br/>needs <em>an angel.</em></h2><p>When Olive and I joined the office,<br/>everything was unfamiliar.</p><p>Then there was you, Priya.<br/>You showed us the way.</p><span className="script">and suddenly, it felt like we belonged.</span></div>
           <div className={`office-stage ${door ? "office-awake" : ""}`}><div className="office-aura"/><OfficeIsland/><button className="office-knock" onClick={()=>{setDoor(true);setBurst(v=>v+1);}}><span>{door ? "♡" : "✧"}</span>{door ? "our guiding angel" : "knock on the door"}</button>{door && <div className="office-note"><span className="micro">A LITTLE NOTE FOR YOU</span>Some people explain the work.<br/>You made us feel at home.<span className="script">thank you for being you.</span></div>}<span className="island-label script">somewhere, an ordinary office.<br/>somehow, an extraordinary beginning.</span></div>
-        </section>
+        <SecretSeal index={0} found={found.includes(0)} onFind={i => { setFound(f => f.includes(i) ? f : [...f, i]); setSealNotice("A secret seal found. Follow the letter trail above. ♡"); }}/></section>
 
         <section className="world-scene connection-scene" aria-label="An invisible thread">
           <div className="connection-heading"><span className="micro">CHAPTER TWO / THE SPACE BETWEEN US GOT SMALLER</span><h2>A hello. A conversation.<br/><em>An invisible thread.</em></h2></div>
@@ -151,14 +170,16 @@ export default function Home() {
         <section className="world-scene tea-scene" aria-label="Tea and gossip">
           <div className="scene-copy tea-copy"><span className="micro">CHAPTER THREE / OUR FAVOURITE LITTLE RITUAL</span><h2>Tea.<br/>Gossip.<br/><em>Repeat.</em></h2><p>After lunch. No grand plans.<br/>Just us, our tea, and conversations<br/>we never wanted to end.</p><span className="script">my favourite part of an ordinary day.</span></div>
           <div className="tea-stage"><TeaWorld stirred={stirred}/><button className="stir-control" onPointerDown={e=>{lastPointer.current={x:e.clientX,y:e.clientY};e.currentTarget.setPointerCapture(e.pointerId);}} onPointerMove={stir} onPointerUp={e=>{lastPointer.current=null;e.currentTarget.releasePointerCapture(e.pointerId);}} onPointerCancel={()=>{lastPointer.current=null;}} onClick={()=>setStirred(v=>clamp(v+.6,0,3))} aria-label="Stir the tea to reveal a memory"><span>↻</span>{stirred>=3 ? "another cup? always." : "stir a little gossip"}</button>{["“Okay, but did you hear…”","One more story. One more sip.","Same time tomorrow? ♡"].map((text,i)=><span key={text} className={`gossip-bubble gossip-${i} ${stirred>i ? "gossip-visible" : ""}`}>{text}</span>)}<span className="tea-hint">DRAG TO STIR · OR TAP FOR A LITTLE STORY</span></div>
-        </section>
+        <SecretSeal index={1} found={found.includes(1)} onFind={i => { setFound(f => f.includes(i) ? f : [...f, i]); setSealNotice("A secret seal found. Follow the letter trail above. ♡"); }}/></section>
 
-        <section className="world-scene memory-scene" aria-label="The memory constellation"><div className="memory-heading"><span className="micro">CHAPTER FOUR / MOMENTS WE GET TO KEEP</span><h2>Our little<br/><em>forever things.</em></h2><p>Click a memory. Stay a little longer.</p></div><div className="memory-vortex">{Array.from({length:10},(_,i)=>{const memory=memories[i%4];return <button key={i} className={`flying-memory flying-${i}`} style={{"--n":i} as CSSProperties} onClick={()=>showPhoto(i%4)} aria-label={`Open memory ${i+1}: ${memory.caption}`}><span className="memory-pin"/><Image unoptimized width={500} height={600} src={memory.photo} alt={memory.alt}/><span>{memory.caption}</span><i>PHOTO PLACEHOLDER</i></button>;})}</div><span className="memory-footnote script">borrowed pictures for now. our memories, soon.</span></section>
+        <section className="world-scene memory-scene" aria-label="The memory constellation"><div className="memory-heading"><span className="micro">CHAPTER FOUR / MOMENTS WE GET TO KEEP</span><h2>Our little<br/><em>forever things.</em></h2><p>Click a memory. Stay a little longer.</p></div><div className="memory-vortex">{Array.from({length:10},(_,i)=>{const memory=memories[i%4];return <button key={i} className={`flying-memory flying-${i}`} style={{"--n":i} as CSSProperties} onClick={()=>showPhoto(i%4)} aria-label={`Open memory ${i+1}: ${memory.caption}`}><span className="memory-pin"/><Image unoptimized width={500} height={600} src={memory.photo} alt={memory.alt}/><span>{memory.caption}</span><i>PHOTO PLACEHOLDER</i></button>;})}</div><span className="memory-footnote script">borrowed pictures for now. our memories, soon.</span><SecretSeal index={2} found={found.includes(2)} onFind={i => { setFound(f => f.includes(i) ? f : [...f, i]); setSealNotice("A secret seal found. Follow the letter trail above. ♡"); }}/></section>
+
+        <PlayScenes found={found} onCelebrate={() => setBurst(v => v + 1)} go={go}/>
 
         <section className={`world-scene finale-scene ${wished ? "wish-sent" : ""}`} aria-label="A birthday wish"><span className="micro finale-kicker">AND NOW, THE WHOLE UNIVERSE IS ROOTING FOR YOU.</span><div className="finale-name" aria-hidden="true">Priya</div><div className="wish-orbit wish-orbit-one"/><div className="wish-orbit wish-orbit-two"/><div className="finale-center"><div className="celestial-cake" aria-hidden="true"><div className="cake-candle"><span/></div><div className="icing"/><div className="cake-tier">✧ ♡ ✧</div><div className="cake-dish"/></div><h2>{wished ? "May it all" : "Close your eyes."}<br/><em>{wished ? "come true." : "Make a wish."}</em></h2><p>{wished ? "More tea. More laughter. More beautiful chapters.\nYou deserve every little bit of it." : "For everything you are. For everything you’re becoming.\nHere’s to a year as lovely as you."}</p><button className="wish-button" onClick={()=>{setWished(!wished);setBurst(v=>v+1);}}>{wished ? "Send another little wish" : "Send your wish to the stars"}<Spark/></button><span className="script finale-signature">with all our love, Simon & Olive ♡</span></div></section>
       </main>
 
-      <footer className="journey-controls"><div className="chapter-count"><span>0{active+1}</span><i>/ 06</i></div><div className="journey-track"><div className="journey-track-line"><span/></div><nav aria-label="Navigate the universe">{chapters.map((name,i)=><button key={name} className={active===i ? "current" : ""} aria-label={`Go to ${name}`} aria-current={active===i ? "step" : undefined} onClick={()=>go(i)}><span/></button>)}</nav></div><div className="chapter-caption"><span>{chapters[active]}</span><small>{active===5 ? "STAY A LITTLE. THIS MOMENT IS YOURS." : "SCROLL TO WANDER"}</small></div><div className="journey-arrows"><button aria-label="Previous chapter" disabled={active===0} onClick={()=>go(active-1)}>↑</button><button aria-label={active===5 ? "Replay the journey" : "Next chapter"} onClick={()=>go(active===5 ? 0 : active+1)}>{active===5 ? "↺" : "↓"}</button></div></footer>
+      <footer className="journey-controls"><div className="chapter-count"><span>0{active+1}</span><i>/ {String(chapters.length).padStart(2,"0")}</i></div><div className="journey-track"><div className="journey-track-line"><span/></div><nav aria-label="Navigate the universe">{chapters.map((name,i)=><button key={name} className={active===i ? "current" : ""} aria-label={`Go to ${name}`} aria-current={active===i ? "step" : undefined} onClick={()=>go(i)}><span/></button>)}</nav></div><div className="chapter-caption"><span>{chapters[active]}</span><small>{active===chapters.length-1 ? "STAY A LITTLE. THIS MOMENT IS YOURS." : "SCROLL TO WANDER"}</small></div><div className="journey-arrows"><button aria-label="Previous chapter" disabled={active===0} onClick={()=>go(active-1)}>↑</button><button aria-label={active===chapters.length-1 ? "Replay the journey" : "Next chapter"} onClick={()=>go(active===chapters.length-1 ? 0 : active+1)}>{active===chapters.length-1 ? "↺" : "↓"}</button></div></footer>
     </div>
     <div className="scroll-journey" aria-hidden="true"/>
     <dialog ref={dialog} className="memory-window" aria-label={photo!==null ? "A memory of us" : "A message from the stars"} onClick={e=>{if(e.target===e.currentTarget)dialog.current?.close();}}><button className="window-close" onClick={()=>dialog.current?.close()} aria-label="Close the memory">×</button>{photo!==null ? <><Image unoptimized width={900} height={900} src={memories[photo].photo} alt={memories[photo].alt}/><span className="micro">A MOMENT IN OUR LITTLE UNIVERSE</span><h2>{memories[photo].title}</h2><p>{memories[photo].description}</p><div className="window-nav"><button onClick={()=>setPhoto((photo+3)%4)}>← Previous</button><span>{photo+1} / 4</span><button onClick={()=>setPhoto((photo+1)%4)}>Next →</button></div></> : fortune!==null ? <><div className="fortune-illustration"><CardArt kind={cards[fortune].symbol}/></div><span className="micro">THE UNIVERSE HAS A LITTLE SOMETHING TO SAY</span><h2>{cards[fortune].title}</h2><p>{cards[fortune].message}</p><div className="window-nav"><button aria-label="Previous fortune" onClick={()=>setFortune((fortune+4)%5)}>←</button><span>{fortune+1} / 5</span><button aria-label="Next fortune" onClick={()=>setFortune((fortune+1)%5)}>→</button></div></> : null}</dialog>

@@ -37,3 +37,11 @@ pnpm build
 ```
 
 Interaction direction draws on the user’s Zajno Motion, HappyScope, Qlip 2025, and Nomadic Tribe references.
+
+## Playful detours and secret letter
+
+Nine stops now include a seven-star collection game, a replayable four-pair celestial matching game, and a hidden-letter hunt. Find the star seals beside the office, below the tea scene, and among the memories. Their letters spell TEA. Enter that word in the moon scene, then click the moon to uncover the letter. Optional clue buttons return to the relevant scenes. Progress is retained while navigating in the current page session; reloading starts a fresh visit.
+
+The personal letter and puzzle clues are in `app/play-scenes.tsx`. Its draft uses Simon’s supplied office, friendship, and tea-break story. Edit the letter there before sharing if you want different wording.
+
+Full motion uses a time-based camera easing loop with overlapping scene transitions and native scrolling, without scroll snapping. Gentle motion remains available for those who prefer it.
