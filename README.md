@@ -23,7 +23,7 @@ Edit `app/birthday-content.ts` for names, memories, fortune messages, and photo 
 
 The loading sequence leads to an entry tap that starts music and confetti. A dimensional Virgo doorway opens the story. Native scrolling moves the camera through a floating office, a friendship constellation, a giant teacup, floating memories, and a birthday wish.
 
-Knock on the office door, connect Simon/Priya/Olive, drag or tap to stir gossip, open photos, and send a wish. The chapter controls offer direct navigation. Sound and motion have separate controls; device reduced-motion preferences are respected. Memory dialogs support Escape and previous/next navigation.
+Knock on the office door, connect Simon/Priya/Olive, drag or tap to stir gossip, open photos, and send a wish. The chapter controls offer direct navigation. Sound and motion have separate controls; full motion is the initial default, with a gentle-motion option. Memory dialogs support Escape and previous/next navigation.
 
 ## Artwork
 
@@ -40,8 +40,22 @@ Interaction direction draws on the user’s Zajno Motion, HappyScope, Qlip 2025,
 
 ## Playful detours and secret letter
 
-Nine stops now include a seven-star collection game, a replayable four-pair celestial matching game, and a hidden-letter hunt. Find the star seals beside the office, below the tea scene, and among the memories. Their letters spell TEA. Enter that word in the moon scene, then click the moon to uncover the letter. Optional clue buttons return to the relevant scenes. Progress is retained while navigating in the current page session; reloading starts a fresh visit.
+Nine stops now include a sixteen-star collection game that forms a heart, a replayable Simon/Priya/Olive/Heart matching game, and a hidden-letter hunt. Find the star seals beside the office, below the tea scene, and among the memories. Their word pieces are CIG, ARE, and TTE. Join them to enter CIGARETTE in the moon scene. Solving the puzzle opens the letter automatically; a large labeled envelope lets her read it again. Optional clue buttons return to the relevant scenes. Progress is retained while navigating in the current page session; reloading starts a fresh visit.
 
 The personal letter and puzzle clues are in `app/play-scenes.tsx`. Its draft uses Simon’s supplied office, friendship, and tea-break story. Edit the letter there before sharing if you want different wording.
 
 Full motion uses a time-based camera easing loop with overlapping scene transitions and native scrolling, without scroll snapping. Gentle motion remains available for those who prefer it.
+
+## Expanded journey and memory soundtrack
+
+There are now 12 stops, including a six-flower birthday garden, a next-outing wheel, and up to six personal wish lanterns. These interactions live in `app/more-scenes.tsx`; persistence is in `app/wish-storage.ts`. Wishes and their sky positions are saved in localStorage on this browser under `priya-birthday-wishes-v1`; they are never sent to a server. Saved wishes restore after reload and sync across tabs. The page offers an explicit clear-saved-wishes control and handles unavailable storage without losing the current on-screen wishes.
+
+The memory scene uses the supplied YRF YouTube upload of Hai Junoon (KK), video ID `_hEgNwyHlAU`, through the official IFrame API in `app/memory-music.tsx`. Its visible player is initialized during the opening loader. YouTube controls media buffering; preparing the player does not guarantee the whole audio is downloaded in advance. The local music-box score continues until YouTube reports playback, then fades out while the song fades in. Leaving the scene or muting fades the song down before pausing it. Transitions take about 1.4 seconds. Browser autoplay restrictions or YouTube errors leave the fallback melody available and the player offers manual playback.
+
+For local audio files, `birthday.music` and `birthday.memoryMusic` support preloading and gain fades. The original memory melody is the fallback while the YouTube soundtrack loads. Reference: https://developers.google.com/youtube/iframe_api_reference
+
+The star game starts as a scattered sky. Each click draws a line from the previous selected star, preserving the player's order. After all sixteen connections, the same stars and attached lines ease into a heart. Replay scatters them again; gentle motion shows the final shape without the movement.
+
+Lanterns settle into six scattered positions with varied heights, angles, and scale. New wishes float upward into place; restored wishes appear in their saved positions and gently drift.
+
+The final heart is made only from the 16 stars and their straight connecting lines; there is no curved outline overlay. Flower controls use compact hit areas so front flowers do not block unplanted seeds behind them.

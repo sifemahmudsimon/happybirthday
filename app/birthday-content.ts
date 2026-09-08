@@ -1,4 +1,4 @@
-// Replace the copy and photo URLs here when your real memories are ready.
+﻿// Replace the copy and photo URLs here when your real memories are ready.
 // Put photos in public/memories, then use paths such as /memories/first-hello.jpg.
 export const birthday = {
   name: "Priya",
@@ -6,7 +6,10 @@ export const birthday = {
   from: "Simon & Olive",
   // Optional: put your chosen song in public and enter its path here.
   // When empty, the page plays a gentle synthesized birthday melody.
-  music: "",
+  music: "/music/birthday.mp3",
+  // Memory scene track: add a local MP3 path once the exact song is supplied.
+  // Empty uses a separate original music-box melody.
+  memoryMusic: "",
 };
 
 export const memories = [

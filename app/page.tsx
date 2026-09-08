@@ -5,10 +5,12 @@ import Image from "next/image";
 import { birthday, cards, memories } from "./birthday-content";
 import { CardArt, Spark } from "./celestial-art";
 import { OfficeIsland, Ribbon, TeaWorld } from "./world-art";
+import { MemoryMusic } from "./memory-music";
+import { MoreScenes } from "./more-scenes";
 import { PlayScenes, SecretSeal } from "./play-scenes";
 import { Confetti, useBirthdayMusic } from "./experience-effects";
 
-const chapters = ["A little universe", "Our office angel", "An invisible thread", "Tea. Gossip. Repeat.", "The memory constellation", "Pocketful of starlight", "Made for each other", "The moon keeps a secret", "A wish for Priya"];
+const chapters = ["A little universe", "Our office angel", "An invisible thread", "Tea. Gossip. Repeat.", "The memory constellation", "Pocketful of starlight", "Made for each other", "The moon keeps a secret", "A garden for your year", "Our next little adventure", "Send a wish into the sky", "A wish for Priya"];
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const subscribe = (callback: () => void) => {
   const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -20,10 +22,11 @@ const getReduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").m
 export default function Home() {
   const [opened, setOpened] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [motion, setMotion] = useState<"system" | "full" | "calm">("system");
+  const [motion, setMotion] = useState<"system" | "full" | "calm">("full");
   const systemReduced = useSyncExternalStore(subscribe, getReduced, () => false);
   const reduced = motion === "calm" || (motion === "system" && systemReduced);
   const [active, setActive] = useState(0);
+  const [memoryPlaying, setMemoryPlaying] = useState(false);
   const [burst, setBurst] = useState(0);
   const [portal, setPortal] = useState(false);
   const [door, setDoor] = useState(false);
@@ -39,7 +42,7 @@ export default function Home() {
   const dialog = useRef<HTMLDialogElement>(null);
   const lastPointer = useRef<{ x: number; y: number } | null>(null);
   const portalTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { sound, soundError, startMusic, toggleSound } = useBirthdayMusic();
+  const { sound, soundError, startMusic, toggleSound } = useBirthdayMusic(active === 4, memoryPlaying);
 
   useEffect(() => {
     let loaded = false;
@@ -143,9 +146,10 @@ export default function Home() {
       <div className="dust-field" aria-hidden="true">{Array.from({length:30},(_,i)=><i key={i} style={{"--left":`${i*37%100}%`,"--top":`${i*19%100}%`,"--delay":`${i%9 * -.8}s`,"--size":`${i%3+2}px`} as CSSProperties}/>)}</div>
       <svg className="travelling-thread" viewBox="0 0 1400 900" fill="none" preserveAspectRatio="none" aria-hidden="true"><path d="M-80 700C290 970 1340 70 1080 200S-50 480 280 660S1580 320 1450 750" stroke="#b86c9b" strokeWidth="19" opacity=".15"/><path d="M-80 700C290 970 1340 70 1080 200S-50 480 280 660S1580 320 1450 750" stroke="#eeb8cc" strokeWidth="10"/><path d="M-80 700C290 970 1340 70 1080 200S-50 480 280 660S1580 320 1450 750" stroke="#ffe7cd" strokeWidth="1.5"/></svg>
 
+      <MemoryMusic visible={opened && active === 4} enabled={opened && sound && active === 4} onPlaying={setMemoryPlaying}/>
       <header className="world-header"><button className="world-brand" onClick={() => go(0)} aria-label="Back to Priya’s birthday"><Spark/><span>PRIYA’S<br/><b>LITTLE UNIVERSE</b></span></button><div className="world-controls"><button onClick={() => setMotion(reduced ? "full" : "calm")} aria-label={reduced ? "Enable full motion" : "Use gentle motion"}>{reduced ? "MOTION: GENTLE" : "MOTION: FULL"}</button><button className="music-control" onClick={toggleSound} aria-label={sound ? "Mute music" : "Play music"}><span className={sound ? "music-bars playing" : "music-bars"}><i/><i/><i/><i/></span><span>{sound ? "SOUND ON" : "SOUND OFF"}</span></button><button className="chapter-menu-button" onClick={() => setMenu(!menu)} aria-expanded={menu} aria-label="Choose a chapter">{menu ? "CLOSE ×" : "CHAPTERS +"}</button></div></header>
       {soundError && <div className="sound-error" role="status">{soundError}</div>}
-      {menu && <nav className="chapter-menu" aria-label="Story chapters">{chapters.map((name,i)=><button key={name} onClick={()=>go(i)}><span>0{i+1}</span>{name}<b>↗</b></button>)}</nav>}
+      {menu && <nav className="chapter-menu" aria-label="Story chapters">{chapters.map((name,i)=><button key={name} onClick={()=>go(i)}><span>{String(i+1).padStart(2,"0")}</span>{name}<b>↗</b></button>)}</nav>}
 
       <button className="secret-tracker" onClick={() => go(7)} aria-label={`Follow the hidden letter clues, ${found.length} of 3 seals found`}>✧ <span>A letter is hiding here</span><b>{found.length}/3</b></button>
       <span className="seal-notice" role="status">{sealNotice}</span>
@@ -176,10 +180,12 @@ export default function Home() {
 
         <PlayScenes found={found} onCelebrate={() => setBurst(v => v + 1)} go={go}/>
 
+        <MoreScenes celebrate={() => setBurst(v => v + 1)}/>
+
         <section className={`world-scene finale-scene ${wished ? "wish-sent" : ""}`} aria-label="A birthday wish"><span className="micro finale-kicker">AND NOW, THE WHOLE UNIVERSE IS ROOTING FOR YOU.</span><div className="finale-name" aria-hidden="true">Priya</div><div className="wish-orbit wish-orbit-one"/><div className="wish-orbit wish-orbit-two"/><div className="finale-center"><div className="celestial-cake" aria-hidden="true"><div className="cake-candle"><span/></div><div className="icing"/><div className="cake-tier">✧ ♡ ✧</div><div className="cake-dish"/></div><h2>{wished ? "May it all" : "Close your eyes."}<br/><em>{wished ? "come true." : "Make a wish."}</em></h2><p>{wished ? "More tea. More laughter. More beautiful chapters.\nYou deserve every little bit of it." : "For everything you are. For everything you’re becoming.\nHere’s to a year as lovely as you."}</p><button className="wish-button" onClick={()=>{setWished(!wished);setBurst(v=>v+1);}}>{wished ? "Send another little wish" : "Send your wish to the stars"}<Spark/></button><span className="script finale-signature">with all our love, Simon & Olive ♡</span></div></section>
       </main>
 
-      <footer className="journey-controls"><div className="chapter-count"><span>0{active+1}</span><i>/ {String(chapters.length).padStart(2,"0")}</i></div><div className="journey-track"><div className="journey-track-line"><span/></div><nav aria-label="Navigate the universe">{chapters.map((name,i)=><button key={name} className={active===i ? "current" : ""} aria-label={`Go to ${name}`} aria-current={active===i ? "step" : undefined} onClick={()=>go(i)}><span/></button>)}</nav></div><div className="chapter-caption"><span>{chapters[active]}</span><small>{active===chapters.length-1 ? "STAY A LITTLE. THIS MOMENT IS YOURS." : "SCROLL TO WANDER"}</small></div><div className="journey-arrows"><button aria-label="Previous chapter" disabled={active===0} onClick={()=>go(active-1)}>↑</button><button aria-label={active===chapters.length-1 ? "Replay the journey" : "Next chapter"} onClick={()=>go(active===chapters.length-1 ? 0 : active+1)}>{active===chapters.length-1 ? "↺" : "↓"}</button></div></footer>
+      <footer className="journey-controls"><div className="chapter-count"><span>{String(active+1).padStart(2,"0")}</span><i>/ {String(chapters.length).padStart(2,"0")}</i></div><div className="journey-track"><div className="journey-track-line"><span/></div><nav aria-label="Navigate the universe">{chapters.map((name,i)=><button key={name} className={active===i ? "current" : ""} aria-label={`Go to ${name}`} aria-current={active===i ? "step" : undefined} onClick={()=>go(i)}><span/></button>)}</nav></div><div className="chapter-caption"><span>{chapters[active]}</span><small>{active===chapters.length-1 ? "STAY A LITTLE. THIS MOMENT IS YOURS." : "SCROLL TO WANDER"}</small></div><div className="journey-arrows"><button aria-label="Previous chapter" disabled={active===0} onClick={()=>go(active-1)}>↑</button><button aria-label={active===chapters.length-1 ? "Replay the journey" : "Next chapter"} onClick={()=>go(active===chapters.length-1 ? 0 : active+1)}>{active===chapters.length-1 ? "↺" : "↓"}</button></div></footer>
     </div>
     <div className="scroll-journey" aria-hidden="true"/>
     <dialog ref={dialog} className="memory-window" aria-label={photo!==null ? "A memory of us" : "A message from the stars"} onClick={e=>{if(e.target===e.currentTarget)dialog.current?.close();}}><button className="window-close" onClick={()=>dialog.current?.close()} aria-label="Close the memory">×</button>{photo!==null ? <><Image unoptimized width={900} height={900} src={memories[photo].photo} alt={memories[photo].alt}/><span className="micro">A MOMENT IN OUR LITTLE UNIVERSE</span><h2>{memories[photo].title}</h2><p>{memories[photo].description}</p><div className="window-nav"><button onClick={()=>setPhoto((photo+3)%4)}>← Previous</button><span>{photo+1} / 4</span><button onClick={()=>setPhoto((photo+1)%4)}>Next →</button></div></> : fortune!==null ? <><div className="fortune-illustration"><CardArt kind={cards[fortune].symbol}/></div><span className="micro">THE UNIVERSE HAS A LITTLE SOMETHING TO SAY</span><h2>{cards[fortune].title}</h2><p>{cards[fortune].message}</p><div className="window-nav"><button aria-label="Previous fortune" onClick={()=>setFortune((fortune+4)%5)}>←</button><span>{fortune+1} / 5</span><button aria-label="Next fortune" onClick={()=>setFortune((fortune+1)%5)}>→</button></div></> : null}</dialog>

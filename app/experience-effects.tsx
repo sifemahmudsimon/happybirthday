@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useEffect, useRef, useState } from "react";
 import { birthday } from "./birthday-content";
 const clamp = (v: number) => Math.min(1, Math.max(0, v));
@@ -35,41 +35,93 @@ export function Confetti({ trigger, reduced }: { trigger: number; reduced: boole
 }
 
 
-export function useBirthdayMusic() {
+export function useBirthdayMusic(inMemories = false, externalPlaying = false) {
   const [sound, setSound] = useState(false);
   const [soundError, setSoundError] = useState("");
   const audio = useRef<AudioContext | null>(null);
   const song = useRef<HTMLAudioElement | null>(null);
-  const musicTimer = useRef<ReturnType<typeof setInterval> | null>(null);
-  useEffect(() => () => { if (musicTimer.current) clearInterval(musicTimer.current); void audio.current?.close(); song.current?.pause(); }, []);
-  async function startMusic() {
-    try {
-      setSoundError("");
-      if (birthday.music) { song.current ??= new Audio(birthday.music); song.current.loop = true; song.current.volume = .45; await song.current.play(); }
-      else if (audio.current) await audio.current.resume();
-      else {
-        const context = new AudioContext(); audio.current = context; await context.resume();
-        const notes = [261.63,261.63,293.66,261.63,349.23,329.63,261.63,261.63,293.66,261.63,392,349.23,261.63,261.63,523.25,440,349.23,329.63,293.66,466.16,466.16,440,349.23,392,349.23];
-        const lengths = [.3,.3,.6,.6,.6,1.2,.3,.3,.6,.6,.6,1.2,.3,.3,.6,.6,.6,.6,1.2,.3,.3,.6,.6,.6,1.5];
-        const schedule = () => {
-          if (context.state !== "running") return;
-          let time = context.currentTime + .05;
-          notes.forEach((note,i) => {
-            [1,2].forEach((harmonic) => {
-              const osc = context.createOscillator(), gain = context.createGain();
-              osc.type = "sine"; osc.frequency.value = note * harmonic;
-              gain.gain.setValueAtTime(0, time); gain.gain.linearRampToValueAtTime(harmonic === 1 ? .075 : .025, time + .012); gain.gain.exponentialRampToValueAtTime(.0001, time + lengths[i] + .5);
-              osc.connect(gain); gain.connect(context.destination); osc.start(time); osc.stop(time + lengths[i] + .6);
-            });
-            time += lengths[i];
-          });
-        };
-        schedule(); musicTimer.current = setInterval(schedule, (lengths.reduce((a,b) => a+b,0) + 1) * 1000);
-      }
-      setSound(true);
-    } catch { setSound(false); setSoundError("Tap sound to try the music again."); }
-  }
-  function toggleSound() { if (sound) { void audio.current?.suspend(); song.current?.pause(); setSound(false); } else void startMusic(); }
+  const intendedSound = useRef(false);
 
+  useEffect(() => {
+    const warm = [birthday.music, birthday.memoryMusic].filter(Boolean).map(src => {
+      const media = new Audio(src); media.preload = "auto"; media.load(); return media;
+    });
+    return () => { warm.forEach(media => { media.pause(); media.removeAttribute("src"); media.load(); }); };
+  }, []);
+
+  useEffect(() => {
+    if (!sound || externalPlaying) return;
+    const context = audio.current;
+    if (!context) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setInterval> | undefined;
+    let sceneMedia: HTMLAudioElement | null = null;
+    let mediaSource: MediaElementAudioSourceNode | null = null;
+    const oscillators: OscillatorNode[] = [];
+    const gain = context.createGain();
+    gain.gain.setValueAtTime(0, context.currentTime);
+    gain.gain.linearRampToValueAtTime(1, context.currentTime + 1.4);
+    gain.connect(context.destination);
+    const track = inMemories ? birthday.memoryMusic : birthday.music;
+    function playSynth() {
+      if (!context || cancelled) return;
+      const notes = inMemories
+        ? [261.63,329.63,392,523.25,493.88,392,329.63,293.66,349.23,440,523.25,440,392,329.63,293.66,261.63]
+        : [261.63,261.63,293.66,261.63,349.23,329.63,261.63,261.63,293.66,261.63,392,349.23,261.63,261.63,523.25,440,349.23,329.63,293.66,466.16,466.16,440,349.23,392,349.23];
+      const lengths = inMemories ? notes.map((_, i) => i % 4 === 3 ? 1.4 : .8) : [.3,.3,.6,.6,.6,1.2,.3,.3,.6,.6,.6,1.2,.3,.3,.6,.6,.6,.6,1.2,.3,.3,.6,.6,.6,1.5];
+      const schedule = () => {
+        if (cancelled || context.state !== "running") return;
+        let time = context.currentTime + .05;
+        notes.forEach((note, i) => {
+          [1, 2].forEach(harmonic => {
+            const osc = context.createOscillator(), envelope = context.createGain();
+            osc.frequency.value = note * harmonic;
+            envelope.gain.setValueAtTime(0, time);
+            envelope.gain.linearRampToValueAtTime(harmonic === 1 ? .065 : .018, time + .025);
+            envelope.gain.exponentialRampToValueAtTime(.0001, time + lengths[i] + .55);
+            osc.connect(envelope); envelope.connect(gain);
+            oscillators.push(osc);
+            osc.onended = () => { osc.disconnect(); envelope.disconnect(); const index = oscillators.indexOf(osc); if (index >= 0) oscillators.splice(index, 1); };
+            osc.start(time); osc.stop(time + lengths[i] + .6);
+          });
+          time += lengths[i];
+        });
+      };
+      schedule(); timer = setInterval(schedule, (lengths.reduce((a, b) => a + b, 0) + 1) * 1000);
+    }
+    if (track) {
+      const media = new Audio(track); sceneMedia = media; song.current = media; media.loop = true; media.volume = .4; media.preload = "auto";
+      mediaSource = context.createMediaElementSource(media); mediaSource.connect(gain);
+      void media.play().then(() => { if (cancelled) media.pause(); }).catch(() => {
+        if (cancelled) return;
+        setSoundError("This track couldn’t play. A little music-box melody is playing instead.");
+        playSynth();
+      });
+    } else playSynth();
+    return () => {
+      cancelled = true;
+      if (timer) clearInterval(timer);
+      const currentVolume = gain.gain.value;
+      gain.gain.cancelScheduledValues(context.currentTime);
+      gain.gain.setValueAtTime(currentVolume, context.currentTime);
+      gain.gain.setTargetAtTime(0, context.currentTime, .35);
+      // Stop scheduled notes and disconnect the old scene after its short fade.
+      setTimeout(() => { sceneMedia?.pause(); mediaSource?.disconnect(); [...oscillators].forEach(osc => { try { osc.stop(); } catch {} }); gain.disconnect(); }, 1600);
+    };
+  }, [sound, inMemories, externalPlaying]);
+
+  useEffect(() => () => { intendedSound.current = false; song.current?.pause(); void audio.current?.close(); }, []);
+  async function startMusic() {
+    intendedSound.current = true;
+    try {
+      audio.current ??= new AudioContext();
+      await audio.current.resume();
+      if (intendedSound.current) { setSoundError(""); setSound(true); }
+    } catch { if (intendedSound.current) { setSound(false); setSoundError("Tap sound to try the music again."); } }
+  }
+  function toggleSound() {
+    if (sound) { intendedSound.current = false; setSound(false); setSoundError(""); }
+    else void startMusic();
+  }
   return { sound, soundError, startMusic, toggleSound };
 }
